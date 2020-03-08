@@ -22,160 +22,175 @@ get_ipython().system('which chromedriver')
 
 # In[12]:
 
-
-executable_path = {'executable_path': '/usr/local/bin/chromedriver'}
-browser = Browser('chrome', **executable_path, headless=False)
+def init_browser():
+    # @NOTE: Replace the path with your actual path to the chromedriver
+    executable_path = {'executable_path': '/usr/local/bin/chromedriver'}
+    return Browser("chrome", **executable_path, headless=False)
+    #browser = Browser('chrome', **executable_path, headless=False)
+    
+def scrape():
+    browser = init_browser()
 
 
 # In[13]:
 
 
-# Visit url for NASA Mars News -- Latest News
-news_url = "https://mars.nasa.gov/news/"
-browser.visit(news_url)
-html = browser.html
+    # Visit url for NASA Mars News -- Latest News
+    news_url = "https://mars.nasa.gov/news/"
+    browser.visit(news_url)
+    html = browser.html
 
-# Parse HTML with Beautiful Soup
-soup = bs(html, "html.parser")
+    # Parse HTML with Beautiful Soup
+    soup = bs(html, "html.parser")
 
-# Extract article title and paragraph text
-article = soup.find("div", class_='list_text')
-news_title = article.find("div", class_="content_title").text
-news_p = article.find("div", class_ ="article_teaser_body").text
-print(news_title)
-print(news_p)
+    # Extract article title and paragraph text
+    article = soup.find("div", class_='list_text')
+    news_title = article.find("div", class_="content_title").text
+    news_p = article.find("div", class_ ="article_teaser_body").text
+    print(news_title)
+    print(news_p)
 
 
 # In[14]:
 
 
-# Visit url for JPL Featured Space Image
-image_url = "https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars"
-browser.visit(image_url)
+    # Visit url for JPL Featured Space Image
+    image_url = "https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars"
+    browser.visit(image_url)
 
-# Go to 'FULL IMAGE'
-browser.click_link_by_partial_text('FULL IMAGE')
-time.sleep(5)
+    # Go to 'FULL IMAGE'
+    browser.click_link_by_partial_text('FULL IMAGE')
+    time.sleep(5)
 
-# Go to 'more info'
-browser.click_link_by_partial_text('more info')
+    # Go to 'more info'
+    browser.click_link_by_partial_text('more info')
 
-# Parse HTML with Beautiful Soup
-html = browser.html
-image_soup = bs(html, 'html.parser')
+    # Parse HTML with Beautiful Soup
+    html = browser.html
+    image_soup = bs(html, 'html.parser')
 
-# Scrape the URL
-feat_img_url = image_soup.find('figure', class_='lede').a['href']
-featured_image_url = f'https://www.jpl.nasa.gov{feat_img_url}'
-print(featured_image_url)
+    # Scrape the URL
+    feat_img_url = image_soup.find('figure', class_='lede').a['href']
+    featured_image_url = f'https://www.jpl.nasa.gov{feat_img_url}'
+    print(featured_image_url)
 
 
 # In[17]:
 
 
-#url to twitter page for mars weather
-tweet_url = "https://twitter.com/marswxreport?lang=en"
-tweet_html_content = req.get(tweet_url).text
-soup = bs(tweet_html_content, "lxml")
-tweet_list = soup.find_all('div', class_="js-tweet-text-container")
+    #url to twitter page for mars weather
+    tweet_url = "https://twitter.com/marswxreport?lang=en"
+    tweet_html_content = req.get(tweet_url).text
+    soup = bs(tweet_html_content, "lxml")
+    tweet_list = soup.find_all('div', class_="js-tweet-text-container")
 
-#empty list to hold tweet we are going to keep, used to strip useless content from string
-holds_tweet = []
+    #empty list to hold tweet we are going to keep, used to strip useless content from string
+    holds_tweet = []
 
-# Loop that scans every tweet and searches specifically for those that have weather info
-for tweets in tweet_list: 
-    tweet_body = tweets.find('p').text
-    if 'InSight' and 'sol' in tweet_body:
-        holds_tweet.append(tweet_body)
-        #break statement to only print the first weather tweet found
-        break
-    else: 
-        #if not weather related skip it and try again
-        pass
-    
-#cleaned up tweet removes unncessary link to twitter image included in string, :-26 removes the last 26 characters which is the length of the img url
-#after reviewing several links they all appear to work with the value of -26
-mars_weather = ([holds_tweet[0]][0][:-26])
-tweet_img_link = ([holds_tweet[0]][0][-26:])
-print(f"{mars_weather}: {tweet_img_link}")
+    # Loop that scans every tweet and searches specifically for those that have weather info
+    for tweets in tweet_list: 
+        tweet_body = tweets.find('p').text
+        if 'InSight' and 'sol' in tweet_body:
+            holds_tweet.append(tweet_body)
+            #break statement to only print the first weather tweet found
+            break
+        else: 
+            #if not weather related skip it and try again
+            pass
+
+    #cleaned up tweet removes unncessary link to twitter image included in string, :-26 removes the last 26 characters which is the length of the img url
+    #after reviewing several links they all appear to work with the value of -26
+    mars_weather = ([holds_tweet[0]][0][:-26])
+    tweet_img_link = ([holds_tweet[0]][0][-26:])
+    print(f"{mars_weather}: {tweet_img_link}")
 
 
 # In[41]:
 
 
-# Use Pandas to scrape the table containing facts about Mars
-table = pd.read_html(facts_url)
-mars_facts = table[0]
-# Rename columns
-mars_facts.columns = ['Description','Info']
+    # Use Pandas to scrape the table containing facts about Mars
+    table = pd.read_html(facts_url)
+    mars_facts = table[0]
+    # Rename columns
+    mars_facts.columns = ['Description','Info']
 
 
 # In[42]:
 
 
-mars_facts
+    mars_facts
 
 
 # In[43]:
 
 
-# Use Pandas to convert the data to a HTML table string
-mars_facts.to_html('table.html')
+    # Use Pandas to convert the data to a HTML table string
+    mars_facts.to_html('table.html')
 
 
 # In[44]:
 
 
-#Save html to folder and show as html table string
-mars_df = mars_facts.to_html()
-print(mars_df)
+    #Save html to folder and show as html table string
+    mars_df = mars_facts.to_html()
+    print(mars_df)
 
 
 # In[55]:
 
 
-#Visit the USGS Astrogeology site here to obtain high resolution images for each of Mar's hemispheres.
-hemispheres_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
-browser.visit(hemispheres_url)
-html = browser.html
+    #Visit the USGS Astrogeology site here to obtain high resolution images for each of Mar's hemispheres.
+    hemispheres_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(hemispheres_url)
+    html = browser.html
 
 
 # In[56]:
 
 
-soup = bs(html, 'html.parser')
+    soup = bs(html, 'html.parser')
 
-hemisphere_image_urls = []
+    hemisphere_image_urls = []
 
 
 # In[57]:
 
 
-results = soup.find("div", class_ = "result-list" )
-hemispheres = results.find_all("div", class_="item")
+    results = soup.find("div", class_ = "result-list" )
+    hemispheres = results.find_all("div", class_="item")
 
 
 # In[58]:
 
 
-# Iterate through each image
-for hemisphere in hemispheres:
-    title = hemisphere.find("h3").text
-    title = title.replace("Enhanced", "")
-    end_link = hemisphere.find("a")["href"]
-    image_link = "https://astrogeology.usgs.gov/" + end_link    
-    browser.visit(image_link)
-    html = browser.html
-    soup = bs(html, "html.parser")
-    downloads = soup.find("div", class_="downloads")
-    image_url = downloads.find("a")["href"]
-    hemisphere_image_urls.append({"title": title, "img_url": image_url})
+    # Iterate through each image
+    for hemisphere in hemispheres:
+        title = hemisphere.find("h3").text
+        title = title.replace("Enhanced", "")
+        end_link = hemisphere.find("a")["href"]
+        image_link = "https://astrogeology.usgs.gov/" + end_link    
+        browser.visit(image_link)
+        html = browser.html
+        soup = bs(html, "html.parser")
+        downloads = soup.find("div", class_="downloads")
+        image_url = downloads.find("a")["href"]
+        hemisphere_image_urls.append({"title": title, "img_url": image_url})
 
-# Print image title and url
-print(hemisphere_image_urls)
+    # Print image title and url
+    print(hemisphere_image_urls)
+    
+    # Store data in a dictionary
+    scraped_data = {
+        "sloth_img": sloth_img,
+        "min_temp": min_temp,
+        "max_temp": max_temp
+    }
 
+    # Quite the browser after scraping
+    browser.quit()
 
-# In[ ]:
+    # Return results
+    return scraped_data
 
 
 
